@@ -557,7 +557,8 @@ if __name__ == "__main__":
     parser.add_argument("--max_grad_norm", type=float, default=1.0, help="gradient clipping threshold")
 
     # management
-    parser.add_argument("--corpora", type=str, nargs="+", default=["jp_cc100", "jp_wiki"], help="training corpora")
+    #parser.add_argument("--corpora", type=str, nargs="+", default=["jp_cc100", "jp_wiki"], help="training corpora")
+    parser.add_argument("--corpora", type=str, nargs="+", default=[ "jp_wiki"], help="training corpora")
     parser.add_argument("--checkpoint_path", help="path to saved checkpoint file")
     parser.add_argument("--resume_training", type=str2bool, default=False, help="resume training from checkpoint or not")
     parser.add_argument("--enable_log", type=str2bool, default=False, help="save training log or not")
