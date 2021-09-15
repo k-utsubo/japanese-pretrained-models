@@ -77,6 +77,9 @@ def forward_step(model, tokenizer, batch_data):
     # convert to tensors
     batch_tensor = torch.LongTensor(batch_data).to(model.device)
 
+    # fp16
+    #batch_tensor = torch.ShortTensor(batch_data).to(model.device)
+
     # get inputs and outputs
     input_ids = batch_tensor[:, :-1].contiguous()
     output_ids = batch_tensor[:, 1:].contiguous()
@@ -245,6 +248,11 @@ def train(local_rank, config):
     model = GPT2LMHeadModel(model_config)
     model = model.to(DEVICE)
 
+    # fp16 https://www.ogis-ri.co.jp/otc/hiroba/technical/similar-document-search/part14.html
+    print(model.dtype)
+    model.half()
+    print(model.dtype)
+
     # load model from checkpoint
     if config.checkpoint_path:
         mp_print("----- Checkpoint loaded -----", global_rank)
@@ -354,12 +362,17 @@ def train(local_rank, config):
             
             group_train_filepaths = train_filepaths[train_file_idx:train_file_idx+config.n_train_files_per_group]
             
-            with mp.Pool(processes=config.n_train_files_per_group) as pool:
-                group_train_docs = pool.starmap(
-                    load_docs_from_filepath, 
-                    [(train_filepath, tokenizer) for train_filepath in group_train_filepaths]
-                )
-                train_docs = [doc for docs in group_train_docs for doc in docs]
+            #with mp.Pool(processes=config.n_train_files_per_group) as pool:
+            #    group_train_docs = pool.starmap(
+            #        load_docs_from_filepath,
+            #        [(train_filepath, tokenizer) for train_filepath in group_train_filepaths]
+            #    )
+            #    train_docs = [doc for docs in group_train_docs for doc in docs]
+
+            train_docs=[]
+            for train_filepath in group_train_filepaths:
+                group_train_docs=load_docs_from_filepath(train_filepath, tokenizer)
+                train_docs.append( [doc for docs in group_train_docs for doc in docs])
 
             train_data_source = DataSource(config, tokenizer, train_docs, "train", randomize=True)
             mp_print(str(train_data_source.statistics), global_rank)
